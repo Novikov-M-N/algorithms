@@ -20,7 +20,6 @@ public interface Sorter {
                     arr[j] = tmp;
                     wasSwap = true;
                 }
-                System.out.println(limit + ":" + Arrays.toString(arr));
             }
             limit--;
         }
