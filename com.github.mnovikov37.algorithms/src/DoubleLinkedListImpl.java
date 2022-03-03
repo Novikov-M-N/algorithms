@@ -216,8 +216,13 @@ public class DoubleLinkedListImpl<E> implements DoubleLinkedList<E>, Iterable<E>
                 if (size == 0) {
                     current = first = last = newNode;
                 } else {
+                    if (current == null) {
+                        current = first;
+                    }
                     if (current.prev != null) {
                         current.prev.next = newNode;
+                    } else {
+                        first = newNode;
                     }
                     newNode.prev = current.prev;
                     newNode.next = current;
