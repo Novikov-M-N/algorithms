@@ -100,6 +100,46 @@ public class DoubleLinkedListImpl<E> implements DoubleLinkedList<E>, Iterable<E>
         return size == 0;
     }
 
+    public boolean insert(int index, E value) {
+        boolean result = false;
+        Node<E> current = first;
+
+        if (index >= 0 && index <= size) {
+            result = true;
+            Node<E> newNode = new Node<>(value,null,null);
+            if (isEmpty()) {
+                first = last = newNode;
+            } else {
+                if (index == size) {
+                    last.next = newNode;
+                    newNode.prev = last;
+                    last = newNode;
+                } else {
+                    for (int i = 0; i < index && current != null; i++) {
+                        current = current.next;
+                    }
+                    if (current.prev != null) {
+                        current.prev.next = newNode;
+                    }
+                    newNode.prev = current.prev;
+                    newNode.next = current;
+                    current.prev = newNode;
+                    if (current == first) {
+                        first = newNode;
+                    }
+                }
+            }
+            size++;
+        }
+
+        return result;
+    }
+
+    /**
+     * Пробегает по списку, пока не найдёт узел, содержащий заданный элемент
+     * @param value элемент, который лежит в искомом узле
+     * @return ссылка на искомый узел, либо null, если такой узел в списке отсутствует
+     */
     private Node<E> jumpTo(E value) {
         Node<E> result = first;
         while (result != null && !value.equals(result.item)) {
@@ -114,7 +154,14 @@ public class DoubleLinkedListImpl<E> implements DoubleLinkedList<E>, Iterable<E>
         return new ListIterator<>() {
             private Node<E> current = first;
             private int index = 0;
+
+            // Показывает, вызывались ли уже функции add() или remove()
+            // после последнего вызова функций next() или previous().
+            // Нужно для соблюдения контракта итератора - add()/remove() допускается вызывать один раз
+            // между перемещениями по списку.
             private boolean wasAddRemove = false;
+
+            // Отдельный признак достижения конца списка.
             private boolean rightBound = false;
 
             @Override
@@ -200,36 +247,37 @@ public class DoubleLinkedListImpl<E> implements DoubleLinkedList<E>, Iterable<E>
 
             @Override
             public void set(E e) {
-                if (wasAddRemove) {
-                    throw new IllegalStateException(
-                            "remove() or add() was called. Need to call next() or previous() before calling of set()");
-                } else {
-                    if (current != null) {
-                        current.item = e;
-                    }
+                if (current != null) {
+                    current.item = e;
                 }
             }
 
             @Override
             public void add(E e) {
-                Node<E> newNode = new Node<>(e, null, null);
-                if (size == 0) {
-                    current = first = last = newNode;
+                if (wasAddRemove) {
+                    throw new IllegalStateException(
+                            "remove() or add() was called. Need to call next() or previous() before calling of set()");
                 } else {
-                    if (current == null) {
-                        current = first;
-                    }
-                    if (current.prev != null) {
-                        current.prev.next = newNode;
+                    wasAddRemove = true;
+                    Node<E> newNode = new Node<>(e, null, null);
+                    if (size == 0) {
+                        current = first = last = newNode;
                     } else {
-                        first = newNode;
+                        if (current == null) {
+                            current = first;
+                        }
+                        if (current.prev != null) {
+                            current.prev.next = newNode;
+                        } else {
+                            first = newNode;
+                        }
+                        newNode.prev = current.prev;
+                        newNode.next = current;
+                        current.prev = newNode;
+                        index++;
                     }
-                    newNode.prev = current.prev;
-                    newNode.next = current;
-                    current.prev = newNode;
-                    index++;
+                    size++;
                 }
-                size++;
             }
         };
     }
@@ -238,14 +286,9 @@ public class DoubleLinkedListImpl<E> implements DoubleLinkedList<E>, Iterable<E>
         String prefix = "[";
         StringBuilder sb = new StringBuilder(prefix);
         String separator = "<>";
-        Node<E> current = first;
-        while (current != null) {
-            sb.append(current.item.toString()).append(separator);
-            current = current.next;
+        for (E value : this) {
+            sb.append(value.toString()).append(separator);
         }
-//        for (E value : this) {
-//            sb.append(value.toString()).append(separator);
-//        }
         if (sb.length() > prefix.length()) {
             sb.setLength(sb.length() - separator.length());
         }

@@ -1,51 +1,64 @@
 public class DoubleLinkedListDequeue<E> implements Dequeue<E> {
+
+    private final DoubleLinkedList<E> storage;
+
+    public DoubleLinkedListDequeue() {
+        this.storage = new DoubleLinkedListImpl<>();
+    }
+
     @Override
     public boolean addFirst(E value) {
-        return false;
+        storage.addFirst(value);
+        return true;
     }
 
     @Override
     public boolean addLast(E value) {
-        return false;
+        storage.addLast(value);
+        return true;
     }
 
     @Override
     public E removeFirst() {
-        return null;
+        return storage.removeFirst();
     }
 
     @Override
     public E removeLast() {
-        return null;
+        return storage.removeLast();
     }
 
     @Override
     public boolean add(E object) {
-        return false;
+        return addFirst(object);
     }
 
     @Override
     public E remove() {
-        return null;
+        return removeFirst();
     }
 
     @Override
     public E peek() {
-        return null;
+        return storage.getFirst();
     }
 
     @Override
     public int size() {
-        return 0;
+        return storage.size();
     }
 
     @Override
     public boolean isEmpty() {
-        return false;
+        return storage.isEmpty();
     }
 
     @Override
     public boolean isFull() {
         return false;
+    }
+
+    public String toString() {
+        return storage.toString();
     }
 }
