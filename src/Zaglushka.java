@@ -1,0 +1,5 @@
+/**
+ * Заглушка
+ */
+public class Zaglushka {
+}
