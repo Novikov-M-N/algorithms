@@ -5,5 +5,5 @@ public interface Graph<V, E extends Measurable> {
     void addEdge(V startVertex, V endVertex, E edge);
     int getSize();
     void display();
-    List<V> getBestWay(V startVertex, V endVertex, int metricIndex);
+    void displayBestWay(V startVertex, V endVertex, int metricIndex);
 }

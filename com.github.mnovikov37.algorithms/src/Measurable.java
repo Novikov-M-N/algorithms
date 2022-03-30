@@ -1,3 +1,3 @@
-public interface Measurable <T>{
-    T getMetric(int i);
+public interface Measurable{
+    int getMetric(int i);
 }

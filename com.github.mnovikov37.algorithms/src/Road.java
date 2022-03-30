@@ -1,4 +1,4 @@
-public class Road implements Measurable<Integer>{
+public class Road implements Measurable{
     private final int length;
     private int fare;
 
@@ -8,11 +8,15 @@ public class Road implements Measurable<Integer>{
     }
 
     @Override
-    public Integer getMetric(int i) {
+    public int getMetric(int i) {
         switch (i) {
             case 1 -> { return length; }
             case 2 -> { return fare; }
             default -> throw new IllegalStateException("Unexpected value: " + i);
         }
+    }
+
+    public String toString() {
+        return "Road:{length=" + length + ", fare=" + fare + "}";
     }
 }

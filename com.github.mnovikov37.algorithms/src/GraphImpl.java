@@ -1,8 +1,14 @@
+import java.util.ArrayList;
 import java.util.List;
 
 public class GraphImpl<V, E extends Measurable> implements Graph<V, E>{
     private List<V> vertexList;
     private List<Edge> edgeList;
+
+    public GraphImpl() {
+        vertexList = new ArrayList<>();
+        edgeList = new ArrayList<>();
+    }
 
     @Override
     public void addVertex(V vertex) {
@@ -33,12 +39,24 @@ public class GraphImpl<V, E extends Measurable> implements Graph<V, E>{
 
     @Override
     public void display() {
-
+        for (int i = 0; i < vertexList.size(); i++) {
+            System.out.println(vertexList.get(i));
+            for (Edge edge : edgeList) {
+                if (edge.startVertex == i) {
+                    System.out.println("    -> " + vertexList.get(edge.endVertex) + " : " + edge.edge);
+                }
+            }
+        }
     }
 
     @Override
-    public List<V> getBestWay(V startVertex, V endVertex, int metricIndex) {
-        return null;
+    public void displayBestWay(V startVertex, V endVertex, int metricIndex) {
+        Integer summaryMetric = 0;
+        for (Edge edge : edgeList) {
+            System.out.println(edge.edge.getMetric(metricIndex));
+            summaryMetric += edge.edge.getMetric(metricIndex);
+            System.out.println(summaryMetric);
+        }
     }
 
     private class Edge {
