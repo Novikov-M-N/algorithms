@@ -1,3 +1,6 @@
+/**
+ * Город - содержит только название населённого пункта.
+ */
 public class City {
     private final String name;
 

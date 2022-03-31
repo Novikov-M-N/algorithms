@@ -42,7 +42,7 @@ public class Main {
 
         roadAtlas.display();
 
-//        roadAtlas.getBestWay(moscow, voronezh, RANGE);
+        roadAtlas.displayBestWay(moscow, voronezh, RANGE);
 
     }
 }
