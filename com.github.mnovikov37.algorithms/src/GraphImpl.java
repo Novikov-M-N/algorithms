@@ -50,8 +50,9 @@ public class GraphImpl<V, E extends Measurable> implements Graph<V, E>{
         for (int i = 0; i < vertexList.size(); i++) {
             System.out.println(vertexList.get(i));
             for (Edge edge : edgeList) {
-                if (edge.startVertex == i) {
-                    System.out.println("    <-> " + vertexList.get(edge.endVertex) + " : " + edge.payload);
+                int oppositeVertexIndex = edge.getOppositeVertex(i);
+                if (oppositeVertexIndex != -1) {
+                    System.out.println("    <-> " + vertexList.get(oppositeVertexIndex) + " : " + edge.payload);
                 }
             }
         }
@@ -62,20 +63,33 @@ public class GraphImpl<V, E extends Measurable> implements Graph<V, E>{
         resetEdgeVisited();
         int start = getVertexIndex(startVertex);
         int end = getVertexIndex(endVertex);
-        Queue<Integer> vertexQueue = new LinkedList<>();
-        vertexQueue.offer(start);
         List<Route> routeList = new LinkedList<>();
-        updateRoutes(start, routeList, metricIndex);
+        for (Edge edge : edgeList) {
+            if (!edge.visited) {
+                int lastVertex = edge.getOppositeVertex(start);
+                if (lastVertex != -1) {
+                    routeList.add(new Route(edge, lastVertex, metricIndex));
+                }
+            }
+        }
         List<Route> nextRouteList = new LinkedList<>();
 
         for (Route route : routeList) {
-            if (route.lastVertex != end) {
-                updateRoutes(route.lastVertex, nextRouteList, metricIndex);
+            int vertex = route.lastVertex;
+            if (vertex != end) {
+                for (Edge edge : edgeList) {
+                    if (!edge.visited) {
+                        int lastVertex = edge.getOppositeVertex(vertex);
+                        if (lastVertex != -1) {
+                            nextRouteList.add(new Route(route, edge, lastVertex, metricIndex));
+                        }
+                    }
+                }
             }
         }
 
         routeList = nextRouteList;
-        
+
         for (Route route : routeList) {
             System.out.println(route);
         }
@@ -110,6 +124,16 @@ public class GraphImpl<V, E extends Measurable> implements Graph<V, E>{
             this.startVertex = startVertex;
             this.endVertex = endVertex;
             this.payload = edge;
+        }
+
+        private int getOppositeVertex(int vertexIndex) {
+            if (startVertex == vertexIndex) {
+                return endVertex;
+            }
+            if (endVertex == vertexIndex) {
+                return startVertex;
+            }
+            return -1;
         }
 
         public boolean equals(Object o) {

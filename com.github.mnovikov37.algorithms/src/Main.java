@@ -6,6 +6,7 @@ public class Main {
 
         Graph<City, Road> roadAtlas = new GraphImpl<>();
 
+        /*
         City moscow = new City("Москва");
         City tula = new City("Тула");
         City ryazan = new City("Рязань");
@@ -40,9 +41,40 @@ public class Main {
         roadAtlas.addEdge(saratov, voronezh, new Road(507, 100));
         roadAtlas.addEdge(kursk, voronezh, new Road(230, 100));
 
-        roadAtlas.display();
+         */
 
-        roadAtlas.displayBestWay(moscow, voronezh, RANGE);
+        City A = new City("A");
+        City B = new City("B");
+        City C = new City("C");
+        City D = new City("D");
+        City E = new City("E");
+        City F = new City("F");
+        City G = new City("G");
+        City H = new City("H");
+
+        roadAtlas.addVertex(A);
+        roadAtlas.addVertex(B);
+        roadAtlas.addVertex(C);
+        roadAtlas.addVertex(D);
+        roadAtlas.addVertex(E);
+        roadAtlas.addVertex(F);
+        roadAtlas.addVertex(G);
+        roadAtlas.addVertex(H);
+
+        roadAtlas.addEdge(A, B, new Road(100, 1));
+        roadAtlas.addEdge(B, D, new Road(100, 1));
+        roadAtlas.addEdge(D, H, new Road(100, 1));
+        roadAtlas.addEdge(C, D, new Road(1, 100));
+        roadAtlas.addEdge(D, F, new Road(100, 1));
+        roadAtlas.addEdge(A, C, new Road(1, 100));
+        roadAtlas.addEdge(C, E, new Road(1, 100));
+        roadAtlas.addEdge(E, F, new Road(1, 100));
+        roadAtlas.addEdge(F, G, new Road(1, 100));
+        roadAtlas.addEdge(G, H, new Road(1, 100));
+
+//        roadAtlas.display();
+
+        roadAtlas.displayBestWay(A, H, RANGE);
 
     }
 }
