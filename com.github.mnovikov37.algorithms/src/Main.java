@@ -1,10 +1,12 @@
+import java.util.List;
+
 public class Main {
     private static final int RANGE = 1;
     private static final int COST = 2;
 
     public static void main(String[] args) {
 
-        Graph<City, Road> roadAtlas = new GraphImpl<>();
+        Graph<City, Road> roadAtlas = new GraphImplDijkstraBidirectional<>();
 
         /*
         City moscow = new City("Москва");
@@ -74,7 +76,10 @@ public class Main {
 
 //        roadAtlas.display();
 
-        roadAtlas.displayBestWay(A, H, RANGE);
+        List<Road> bestWay = roadAtlas.getBestWay(A, H, RANGE);
+        for (Road road : bestWay) {
+            System.out.println(road);
+        }
 
     }
 }

@@ -2,11 +2,11 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-public class GraphImpl<V, E extends Measurable> implements Graph<V, E>{
+public class GraphImplDijkstraBidirectional<V, E extends Measurable> implements Graph<V, E>{
     private List<V> vertexList;
     private List<Edge> edgeList;
 
-    public GraphImpl() {
+    public GraphImplDijkstraBidirectional() {
         vertexList = new ArrayList<>();
         edgeList = new ArrayList<>();
     }
@@ -63,7 +63,6 @@ public class GraphImpl<V, E extends Measurable> implements Graph<V, E>{
             System.out.println("Приехали");
         } else {
             unlockAllEdges();
-            resetEdgeVisited();
 
             List<Route> optimalRoutes = new ArrayList<>();
             for (int i = 0; i < vertexList.size(); i++) {
@@ -72,6 +71,8 @@ public class GraphImpl<V, E extends Measurable> implements Graph<V, E>{
 
             int start = getVertexIndex(startVertex);
             int end = getVertexIndex(endVertex);
+
+            resetEdgeVisited();
             List<Route> routeList = initRoutes(start, metricIndex, optimalRoutes);
 
             for (Route route : routeList) {
@@ -86,21 +87,24 @@ public class GraphImpl<V, E extends Measurable> implements Graph<V, E>{
                 boolean optimalRoutesWasUpdated = false;
                 List<Route> nextRouteList = new LinkedList<>();
                 for (Route route : routeList) {
+                    System.out.println("# " + route);
                     int vertex = route.lastVertex;
                     if (vertex != end) {
                         for (Edge edge : edgeList) {
                             if (edge.canAddToRoute(vertex)) {
                                 routesWasUpdated = true;
                                 Route newRoute = new Route(route, edge);
-                                Route optimalRoute = optimalRoutes.get(newRoute.lastVertex);
+                                System.out.println("    -> " + newRoute);
+                                int finish = newRoute.lastVertex;
+                                Route optimalRoute = optimalRoutes.get(finish);
+                                System.out.println("    OPTIMAL: " + optimalRoute);
                                 if (optimalRoute == null) {
-                                    optimalRoutes.set(newRoute.lastVertex, newRoute);
+                                    optimalRoutes.set(finish, newRoute);
                                     nextRouteList.add(newRoute);
                                 } else {
                                     if (newRoute.summaryMetric < optimalRoute.summaryMetric) {
                                         optimalRoute.lock();
-                                        optimalRoutes.set(newRoute.lastVertex, newRoute);
-                                        routeList.add(newRoute);
+                                        optimalRoutes.set(finish, newRoute);
                                     } else {
                                         newRoute.lock();
                                     }
@@ -130,26 +134,47 @@ public class GraphImpl<V, E extends Measurable> implements Graph<V, E>{
         }
     }
 
+    @Override
+    public List<E> getBestWay(V startVertex, V endVertex, int metricIndex) {
+        List<E> result = new ArrayList<>();
+
+        AdjMatrix adjMatrix = new AdjMatrix(metricIndex);
+
+        for (int i = 0; i < vertexList.size(); i++) {
+            for (int j = 0; j < vertexList.size(); j++) {
+                System.out.print(adjMatrix.get(i, j) + " ");
+            }
+            System.out.println();
+        }
+
+        return result;
+    }
+
     private void unlockAllEdges() {
         edgeList.forEach(e -> e.locked = false);
     }
 
     private List<Route> initRoutes(int vertex, int metricIndex, List<Route> optimalRoutes) {
         List<Route> result = new ArrayList<>();
-        for (Edge edge : edgeList) {
-            if (edge.canAddToRoute(vertex)) {
-                Route newRoute = new Route(edge, vertex, metricIndex);
-                Route optimalRoute = optimalRoutes.get(newRoute.lastVertex);
-                if (optimalRoute == null) {
-                    optimalRoutes.set(newRoute.lastVertex, newRoute);
-                    result.add(newRoute);
-                } else {
-                    if (newRoute.summaryMetric < optimalRoute.summaryMetric) {
-                        optimalRoute.lock();
-                        optimalRoutes.set(newRoute.lastVertex, newRoute);
+        boolean optimalRoutesWasUpdated = true;
+        while (optimalRoutesWasUpdated) {
+            optimalRoutesWasUpdated = false;
+            for (Edge edge : edgeList) {
+                if (edge.canAddToRoute(vertex)) {
+                    Route newRoute = new Route(edge, vertex, metricIndex);
+                    int finish = newRoute.lastVertex;
+                    Route optimalRoute = optimalRoutes.get(finish);
+                    if (optimalRoute == null) {
+                        optimalRoutes.set(finish, newRoute);
                         result.add(newRoute);
                     } else {
-                        newRoute.lock();
+                        if (newRoute.summaryMetric < optimalRoute.summaryMetric) {
+                            optimalRoute.lock();
+                        } else {
+                            newRoute.lock();
+                        }
+                        optimalRoutes.clear();
+                        optimalRoutesWasUpdated = true;
                     }
                 }
             }
@@ -250,6 +275,26 @@ public class GraphImpl<V, E extends Measurable> implements Graph<V, E>{
             return "Route:{edgeList=" + edgeList
                     + ", summaryMetric=" + summaryMetric
                     + ", lastVertex=" + vertexList.get(lastVertex) + "}";
+        }
+    }
+
+    private class AdjMatrix {
+        Object[][] payload;
+
+        private AdjMatrix(int metricIndex) {
+            int size = vertexList.size();
+            payload = new Object[size][size];
+            for (Edge edge : edgeList) {
+                Object cell = payload[edge.startVertex][edge.endVertex];
+                if (cell == null || ((E) cell).getMetric(metricIndex) > edge.payload.getMetric(metricIndex)) {
+                    payload[edge.startVertex][edge.endVertex] = edge.payload;
+                    payload[edge.endVertex][edge.startVertex] = edge.payload;
+                }
+            }
+        }
+
+        E get(int i, int j) {
+            return (E) payload[i][j];
         }
     }
 }
