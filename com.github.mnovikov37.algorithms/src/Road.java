@@ -4,10 +4,12 @@
  * класса данных в составе графа.
  */
 public class Road implements Measurable{
+    private String name;
     private final int length;
     private int fare;
 
-    public Road(int length, int fare) {
+    public Road(String name, int length, int fare) {
+        this.name = name;
         this.length = length;
         this.fare = fare;
     }
@@ -29,6 +31,6 @@ public class Road implements Measurable{
     }
 
     public String toString() {
-        return "Road:{length=" + length + ", fare=" + fare + "}";
+        return "Road:{name=" + name + ", length=" + length + ", fare=" + fare + "}";
     }
 }

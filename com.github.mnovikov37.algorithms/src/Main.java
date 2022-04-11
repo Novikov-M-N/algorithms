@@ -63,16 +63,16 @@ public class Main {
         roadAtlas.addVertex(G);
         roadAtlas.addVertex(H);
 
-        roadAtlas.addEdge(A, B, new Road(100, 1));
-        roadAtlas.addEdge(B, D, new Road(100, 1));
-        roadAtlas.addEdge(D, H, new Road(100, 1));
-        roadAtlas.addEdge(C, D, new Road(1, 100));
-        roadAtlas.addEdge(D, F, new Road(100, 1));
-        roadAtlas.addEdge(A, C, new Road(1, 100));
-        roadAtlas.addEdge(C, E, new Road(1, 100));
-        roadAtlas.addEdge(E, F, new Road(1, 100));
-        roadAtlas.addEdge(F, G, new Road(1, 100));
-        roadAtlas.addEdge(G, H, new Road(1, 100));
+        roadAtlas.addEdge(A, B, new Road("a",100, 1));
+        roadAtlas.addEdge(B, D, new Road("b", 100, 1));
+        roadAtlas.addEdge(D, H, new Road("c", 100, 1));
+        roadAtlas.addEdge(C, D, new Road("d", 1, 100));
+        roadAtlas.addEdge(D, F, new Road("e", 100, 1));
+        roadAtlas.addEdge(A, C, new Road("f", 1, 100));
+        roadAtlas.addEdge(C, E, new Road("g", 1, 100));
+        roadAtlas.addEdge(E, F, new Road("h", 1, 100));
+        roadAtlas.addEdge(F, G, new Road("i", 1, 100));
+        roadAtlas.addEdge(G, H, new Road("j", 1, 100));
 
 //        roadAtlas.display();
 

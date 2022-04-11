@@ -34,7 +34,7 @@ public class GraphImplDijkstraBidirectional<V, E extends Measurable> implements 
         int end = getVertexIndex(endVertex);
         Edge edge = new Edge(start, end, payload);
         if (edgeList.contains(edge)) {
-            throw new IllegalArgumentException("Graph already contains edge " + edge.toString());
+            throw new IllegalArgumentException("Graph already contains edge " + edge);
         }
         edgeList.add(new Edge(start, end, payload));
     }
@@ -61,34 +61,89 @@ public class GraphImplDijkstraBidirectional<V, E extends Measurable> implements 
     public List<E> getBestWay(V startVertex, V endVertex, int metricIndex) {
         List<E> result = new ArrayList<>();
         int size = vertexList.size();
+        int start = getVertexIndex(startVertex);
+        int end = getVertexIndex(endVertex);
 
         AdjMatrix adjMatrix = new AdjMatrix(metricIndex);
 
-//        for (int i = 0; i < vertexList.size(); i++) {
-//            for (int j = 0; j < vertexList.size(); j++) {
-//                System.out.printf("%30s", adjMatrix.get(i, j));
-//            }
-//            System.out.println();
-//        }
+        List<Route> routes = generateRoutesList(size, start, metricIndex);
 
-        List<Route> routes = new ArrayList<>(size);
-        for (int i = 0; i < size; i++) {
-            routes.add(null);
+        boolean[] visited = new boolean[size];
+
+        int currentVertex = getCurrentVertex(routes, visited);
+        for (; currentVertex != -1; currentVertex = getCurrentVertex(routes, visited)) {
+            visited[currentVertex] = true;
+            int currentMetric = routes.get(currentVertex).summaryMetric;
+            boolean[] visitedNext = new boolean[size];
+            System.arraycopy(visited, 0, visitedNext, 0, size);
+            int nextVertex = getNextVertex(currentVertex, adjMatrix, visitedNext, metricIndex);
+            for (; nextVertex != -1; nextVertex = getNextVertex(currentVertex, adjMatrix, visitedNext, metricIndex)) {
+                visitedNext[nextVertex] = true;
+                E edge = adjMatrix.get(currentVertex, nextVertex);
+                int newMetric = currentMetric + edge.getMetric(metricIndex);
+                Route route = routes.get(nextVertex);
+                if (route == null || newMetric < route.summaryMetric) {
+                    routes.set(nextVertex, new Route(routes.get(currentVertex), edge));
+                }
+            }
+        }
+
+        if (routes.get(end) != null) {
+            result = routes.get(end).edgeList;
         }
 
         return result;
     }
 
-    private void resetEdgeVisited() {
-        edgeList.forEach(e -> e.visited = false);
+    private List<Route> generateRoutesList(int size, int start, int metricIndex) {
+        List<Route> result = new ArrayList<>(size);
+
+        for (int i = 0; i < size; i++) {
+            result.add(null);
+        }
+        result.set(start, new Route(metricIndex));
+
+        return result;
+    }
+
+    private int getNextVertex(int currentVertex, AdjMatrix adjMatrix, boolean[] visited, int metricIndex) {
+        int result = -1;
+
+        int min = Integer.MAX_VALUE;
+        for (int i = 0; i < visited.length; i++) {
+            if (!visited[i]) {
+                E edge = adjMatrix.get(currentVertex, i);
+                if (edge != null && edge.getMetric(metricIndex) < min) {
+                    result = i;
+                    min = edge.getMetric(metricIndex);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    private int getCurrentVertex(List<Route> routes, boolean[] visited) {
+        int result = -1;
+
+        int min = Integer.MAX_VALUE;
+        for (int i = 0; i < visited.length; i++) {
+            if (!visited[i]) {
+                Route route = routes.get(i);
+                if (route != null && route.summaryMetric < min) {
+                    result = i;
+                    min = route.summaryMetric;
+                }
+            }
+        }
+
+        return result;
     }
 
     private class Edge {
         private int startVertex;
         private int endVertex;
         private E payload;
-        private boolean visited;
-        private boolean locked;
 
         private Edge(int startVertex, int endVertex, E edge) {
             this.startVertex = startVertex;
@@ -104,10 +159,6 @@ public class GraphImplDijkstraBidirectional<V, E extends Measurable> implements 
                 return startVertex;
             }
             return -1;
-        }
-
-        private boolean canAddToRoute(int vertex) {
-            return !locked && !visited && (startVertex == vertex || endVertex == vertex);
         }
 
         public boolean equals(Object o) {
@@ -127,22 +178,28 @@ public class GraphImplDijkstraBidirectional<V, E extends Measurable> implements 
     }
 
     private class Route {
-        List<Edge> edgeList;
+        List<E> edgeList;
         int summaryMetric;
         int metricIndex;
 
-        private Route(Route route, Edge edge) {
+        private Route(Route route, E edge) {
             this.edgeList = new ArrayList<>(route.edgeList);
             this.edgeList.add(edge);
             this.metricIndex = route.metricIndex;
-            this.summaryMetric = route.summaryMetric + edge.payload.getMetric(metricIndex);
+            this.summaryMetric = route.summaryMetric + edge.getMetric(metricIndex);
         }
 
-        private Route(Edge edge, int metricIndex) {
+        private Route(E edge, int metricIndex) {
             this.edgeList = new ArrayList<>();
             this.edgeList.add(edge);
             this.metricIndex = metricIndex;
-            summaryMetric = edge.payload.getMetric(metricIndex);
+            summaryMetric = edge.getMetric(metricIndex);
+        }
+
+        private Route(int metricIndex) {
+            this.edgeList = new ArrayList<>();
+            this.metricIndex = metricIndex;
+            this.summaryMetric = 0;
         }
 
         public String toString() {
