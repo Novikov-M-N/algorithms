@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 public class GraphImplDijkstraBidirectional<V, E extends Measurable> implements Graph<V, E>{
@@ -36,7 +35,7 @@ public class GraphImplDijkstraBidirectional<V, E extends Measurable> implements 
         if (edgeList.contains(edge)) {
             throw new IllegalArgumentException("Graph already contains edge " + edge);
         }
-        edgeList.add(new Edge(start, end, payload));
+        edgeList.add(edge);
     }
 
     @Override
@@ -144,6 +143,7 @@ public class GraphImplDijkstraBidirectional<V, E extends Measurable> implements 
         private int startVertex;
         private int endVertex;
         private E payload;
+        private int hashCode = 0;
 
         private Edge(int startVertex, int endVertex, E edge) {
             this.startVertex = startVertex;
@@ -170,6 +170,14 @@ public class GraphImplDijkstraBidirectional<V, E extends Measurable> implements 
                     && edge.payload.equals(this.payload);
         }
 
+        public int hashCode() {
+            if (hashCode == 0) {
+                hashCode = 31 * startVertex + endVertex;
+                hashCode = 31 * hashCode + payload.hashCode();
+            }
+            return hashCode;
+        }
+
         public String toString() {
             return "Edge:{startVertex=" + vertexList.get(startVertex).toString()
                     + ", endVertex=" + vertexList.get(endVertex).toString()
@@ -187,13 +195,6 @@ public class GraphImplDijkstraBidirectional<V, E extends Measurable> implements 
             this.edgeList.add(edge);
             this.metricIndex = route.metricIndex;
             this.summaryMetric = route.summaryMetric + edge.getMetric(metricIndex);
-        }
-
-        private Route(E edge, int metricIndex) {
-            this.edgeList = new ArrayList<>();
-            this.edgeList.add(edge);
-            this.metricIndex = metricIndex;
-            summaryMetric = edge.getMetric(metricIndex);
         }
 
         private Route(int metricIndex) {

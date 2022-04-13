@@ -74,7 +74,7 @@ public class Main {
         roadAtlas.addEdge(F, G, new Road("i", 1, 100));
         roadAtlas.addEdge(G, H, new Road("j", 1, 100));
 
-//        roadAtlas.display();
+        roadAtlas.display();
 
         List<Road> bestWay = roadAtlas.getBestWay(A, H, RANGE);
         for (Road road : bestWay) {
