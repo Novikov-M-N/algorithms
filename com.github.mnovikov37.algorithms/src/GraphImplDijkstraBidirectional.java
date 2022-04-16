@@ -1,6 +1,11 @@
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Реализация графа с двунаправленными рёбрами и расчётом оптимального пути по алгоритму Дейкстры
+ * @param <V> Класс вершины
+ * @param <E> Класс ребра
+ */
 public class GraphImplDijkstraBidirectional<V, E extends Measurable> implements Graph<V, E>{
     private List<V> vertexList;
     private List<Edge> edgeList;
@@ -63,20 +68,33 @@ public class GraphImplDijkstraBidirectional<V, E extends Measurable> implements 
         int start = getVertexIndex(startVertex);
         int end = getVertexIndex(endVertex);
 
+        // Матрица смежности строится для каждого случая вычисления лучшего пути,
+        // т.к. для её построения нужно знать, по какой метрике выбирается оптимальный путь.
         AdjMatrix adjMatrix = new AdjMatrix(metricIndex);
 
+        // Результатом работы алгоритма будет список оптимальных путей до каждой вершины.
         List<Route> routes = generateRoutesList(size, start, metricIndex);
 
+        // В ходе расчёта нужно запоминать, какие из вершин уже обработаны
         boolean[] visited = new boolean[size];
 
-        int currentVertex = getCurrentVertex(routes, visited);
-        for (; currentVertex != -1; currentVertex = getCurrentVertex(routes, visited)) {
+        for (int currentVertex = start; currentVertex != -1; currentVertex = getCurrentVertex(routes, visited)) {
+            // На каждом шаге выбираем вершину графа с минимальной метрикой. Стартовая вершина имеет метрику ноль.
             visited[currentVertex] = true;
             int currentMetric = routes.get(currentVertex).summaryMetric;
+
+            // Копируем массив флагов посещения вершин на каждом шаге и работаем с этой копией. Изменения в ходе
+            // очередного шага алгоритма не должны коснуться исходного массива посещения вершин.
             boolean[] visitedNext = new boolean[size];
             System.arraycopy(visited, 0, visitedNext, 0, size);
-            int nextVertex = getNextVertex(currentVertex, adjMatrix, visitedNext, metricIndex);
-            for (; nextVertex != -1; nextVertex = getNextVertex(currentVertex, adjMatrix, visitedNext, metricIndex)) {
+
+            for (int nextVertex = getNextVertex(currentVertex, adjMatrix, visitedNext, metricIndex);
+                 nextVertex != -1; nextVertex = getNextVertex(currentVertex, adjMatrix, visitedNext, metricIndex)) {
+
+                // Обходм все не посещённые смежные вершины в порядке возрастания метрики и для каждой из них
+                // находим новую метку, равную сумме метки текущей вершины (см. внешний цикл) и ребра,
+                // соединяющего текущую и следующую вершину. Если полученная метка меньше существующей метки вершины,
+                // то заменяем для этой вершины путь на путь до текущей вершины + соединяющее их ребро.
                 visitedNext[nextVertex] = true;
                 E edge = adjMatrix.get(currentVertex, nextVertex);
                 int newMetric = currentMetric + edge.getMetric(metricIndex);
@@ -87,6 +105,7 @@ public class GraphImplDijkstraBidirectional<V, E extends Measurable> implements 
             }
         }
 
+        // Результатом будет список рёбер, составляющих оптимальный путь до конечной вершины, если таковой существует.
         if (routes.get(end) != null) {
             result = routes.get(end).edgeList;
         }
@@ -94,6 +113,14 @@ public class GraphImplDijkstraBidirectional<V, E extends Measurable> implements 
         return result;
     }
 
+    /**
+     * Создаёт список путей до каждой вершины и заполняет значениями null. Для стартовой вершины создаётся путь
+     * нулевой длины.
+     * @param size Количество вершин в графе
+     * @param start Номер стартовой вершины
+     * @param metricIndex Номер метрики, по которой считается оптимальный путь
+     * @return Список не существующих путей для всех вершин, кроме стартовой. Для стартовой путь нулевой длины.
+     */
     private List<Route> generateRoutesList(int size, int start, int metricIndex) {
         List<Route> result = new ArrayList<>(size);
 
@@ -105,6 +132,14 @@ public class GraphImplDijkstraBidirectional<V, E extends Measurable> implements 
         return result;
     }
 
+    /**
+     * Определяет следующую для рассмотрения вершину от текущей. Выбирается по минимальной метрике ребра до неё.
+     * @param currentVertex Номер текущей вершины
+     * @param adjMatrix Матрица смежности графа
+     * @param visited Массив флагов посещения вершин
+     * @param metricIndex Номер метрики, по которой определяется оптимальный путь
+     * @return Номер следующей вершины для рассмотрения варианта пути, либо -1, если таковая вершина не найдена
+     */
     private int getNextVertex(int currentVertex, AdjMatrix adjMatrix, boolean[] visited, int metricIndex) {
         int result = -1;
 
@@ -122,6 +157,12 @@ public class GraphImplDijkstraBidirectional<V, E extends Measurable> implements 
         return result;
     }
 
+    /**
+     * Определяет следующую вершину по минимальной метрике найденного ранее пути до неё.
+     * @param routes Список оптимальных путей до каждой вершины
+     * @param visited Массив флагов посещения вершин
+     * @return Номер следующей вершины, либо -1, если таковая вершина не найдена
+     */
     private int getCurrentVertex(List<Route> routes, boolean[] visited) {
         int result = -1;
 
@@ -139,6 +180,10 @@ public class GraphImplDijkstraBidirectional<V, E extends Measurable> implements 
         return result;
     }
 
+    /**
+     * Ребро графа. Состоит из номеров вершин начала и конца и собственно ребра - объёкта класса E,
+     * имеющего метрику.
+     */
     private class Edge {
         private int startVertex;
         private int endVertex;
@@ -151,6 +196,11 @@ public class GraphImplDijkstraBidirectional<V, E extends Measurable> implements 
             this.payload = edge;
         }
 
+        /**
+         * Нахождение номера противоположной вершины ребра
+         * @param vertexIndex Номер известной вершины ребра
+         * @return Номер противоположной вершины ребра, либо -1, если ребро не содержит известной вершины
+         */
         private int getOppositeVertex(int vertexIndex) {
             if (startVertex == vertexIndex) {
                 return endVertex;
@@ -185,11 +235,19 @@ public class GraphImplDijkstraBidirectional<V, E extends Measurable> implements 
         }
     }
 
+    /**
+     * Путь. Состоит из рёбер графа. Содержит список рёбер и сумму их метрик.
+     */
     private class Route {
         List<E> edgeList;
         int summaryMetric;
         int metricIndex;
 
+        /**
+         * Создаёт новый путь на основе существующего пути и добавления к нему нового ребра
+         * @param route Прежний путь
+         * @param edge Новое ребро
+         */
         private Route(Route route, E edge) {
             this.edgeList = new ArrayList<>(route.edgeList);
             this.edgeList.add(edge);
@@ -197,6 +255,10 @@ public class GraphImplDijkstraBidirectional<V, E extends Measurable> implements 
             this.summaryMetric = route.summaryMetric + edge.getMetric(metricIndex);
         }
 
+        /**
+         * Создаёт пустой путь
+         * @param metricIndex Номер метрики, по которой будет производиться расчёт стоимости пути
+         */
         private Route(int metricIndex) {
             this.edgeList = new ArrayList<>();
             this.metricIndex = metricIndex;
@@ -210,9 +272,18 @@ public class GraphImplDijkstraBidirectional<V, E extends Measurable> implements 
         }
     }
 
+    /**
+     * Матрица смежности графа. Содержит рёбра, соединяющие вершины i и j,
+     * либо null, если между этими вершинами нет рёбер. Матрица симметрична, т.к. граф не направленный.
+     */
     private class AdjMatrix {
         Object[][] payload;
 
+        /**
+         * Создаёт матрицу смежности на основе списка рёбер графа. Если между вершинами есть несколько рёбер,
+         * то в матрицу вносится ребро с минимальной метрикой.
+         * @param metricIndex Номер метрики, по которой считается стоимость ребра.
+         */
         private AdjMatrix(int metricIndex) {
             int size = vertexList.size();
             payload = new Object[size][size];
